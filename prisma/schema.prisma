@@ -1,8 +1,6 @@
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
-// Get a free hosted Postgres database in seconds: `npx create-db`
-
 generator client {
   provider = "prisma-client"
   output   = "../generated/prisma"
@@ -10,4 +8,110 @@ generator client {
 
 datasource db {
   provider = "mysql"
+}
+
+enum ToneEnum {
+  primary
+  success
+  warning
+  info
+}
+
+enum PriorityEnum {
+  Alta
+  Normal
+  Baja
+}
+
+enum TechniqueEnum {
+  Pomodoro
+  Mapas_mentales @map("Mapas mentales")
+  Active_Recall  @map("Active Recall")
+  Lectura
+}
+
+model User {
+  id           Int             @id @default(autoincrement()) @db.UnsignedInt
+  name         String          @db.VarChar(100)
+  email        String          @unique @db.VarChar(150)
+  passwordHash String          @map("password_hash") @db.VarChar(255)
+  createdAt    DateTime        @default(now()) @map("created_at") @db.Timestamp(0)
+  
+  subjects     Subject[]
+  tasks        Task[]
+  studySessions StudySession[]
+
+  @@map("users")
+}
+
+model Subject {
+  id          Int          @id @default(autoincrement()) @db.UnsignedInt
+  userId      Int          @map("user_id") @db.UnsignedInt
+  name        String       @db.VarChar(100)
+  description String?      @db.VarChar(255)
+  progress    Int          @default(0) @db.UnsignedTinyInt
+  tone        ToneEnum     @default(primary)
+
+  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  notes       Note[]
+  exams       Exam[]
+  tasks       Task[]
+  studySessions StudySession[]
+
+  @@unique([userId, name], map: "uq_subjects_user_name")
+  @@map("subjects")
+}
+
+model Note {
+  id        Int      @id @default(autoincrement()) @db.UnsignedInt
+  subjectId Int      @map("subject_id") @db.UnsignedInt
+  title     String   @db.VarChar(150)
+  content   String?  @db.Text
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamp(0)
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamp(0)
+
+  subject   Subject  @relation(fields: [subjectId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@map("notes")
+}
+
+model Exam {
+  id        Int      @id @default(autoincrement()) @db.UnsignedInt
+  subjectId Int      @map("subject_id") @db.UnsignedInt
+  title     String   @db.VarChar(150)
+  examDate  DateTime @map("exam_date") @db.Date
+
+  subject   Subject  @relation(fields: [subjectId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@map("exams")
+}
+
+model Task {
+  id        Int          @id @default(autoincrement()) @db.UnsignedInt
+  userId    Int          @map("user_id") @db.UnsignedInt
+  subjectId Int?         @map("subject_id") @db.UnsignedInt
+  title     String       @db.VarChar(150)
+  priority  PriorityEnum @default(Normal)
+  completed Boolean      @default(false)
+  dueDate   DateTime?    @map("due_date") @db.Date
+  createdAt DateTime     @default(now()) @map("created_at") @db.Timestamp(0)
+
+  user      User         @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  subject   Subject?     @relation(fields: [subjectId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+
+  @@map("tasks")
+}
+
+model StudySession {
+  id              Int           @id @default(autoincrement()) @db.UnsignedInt
+  userId          Int           @map("user_id") @db.UnsignedInt
+  subjectId       Int           @map("subject_id") @db.UnsignedInt
+  technique       TechniqueEnum @default(Pomodoro)
+  startedAt       DateTime      @map("started_at") @db.DateTime(0)
+  durationMinutes Int           @map("duration_minutes") @db.UnsignedSmallInt
+
+  user            User          @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  subject         Subject       @relation(fields: [subjectId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@map("study_sessions")
 }
