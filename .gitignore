@@ -59,4 +59,14 @@ pids
 # Diagnostic reports (https://nodejs.org/api/report.html)
 report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
 
+/generated
 /generated/prisma
+/generated/prisma
+/src/generated/prisma
+ 
+# Carpetas de configuración de agentes y editores de IA
+.agents/
+.claude/
+.cursor/
+.devin/
+.windsurf/
