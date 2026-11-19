@@ -1,26 +1,18 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { compare } from 'bcryptjs';
+import { PrismaService } from '../prisma/prisma.service.js';
 import { CreateAuthDto } from './dto/create-auth.dto.js';
-import { UpdateAuthDto } from './dto/update-auth.dto.js';
 
 @Injectable()
 export class AuthService {
-  create(createAuthDto: CreateAuthDto) {
-    return 'This action adds a new auth';
-  }
+  constructor(private readonly prisma: PrismaService) {}
 
-  findAll() {
-    return `This action returns all auth`;
-  }
-
-  findOne(id: number) {
-    return `This action returns a #${id} auth`;
-  }
-
-  update(id: number, updateAuthDto: UpdateAuthDto) {
-    return `This action updates a #${id} auth`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} auth`;
+  async login(dto: CreateAuthDto) {
+    const user = await this.prisma.user.findUnique({ where: { email: dto.email } });
+    // Mismo mensaje para correo inexistente y contraseña incorrecta
+    if (!user || !(await compare(dto.password, user.passwordHash))) {
+      throw new UnauthorizedException('Correo o contraseña incorrectos');
+    }
+    return { id: user.id, name: user.name, email: user.email };
   }
 }
