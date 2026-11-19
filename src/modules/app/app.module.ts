@@ -8,6 +8,7 @@ import {StudySessionsModule} from '../study-sessions/study-sessions.module.js'
 import {NotesModule} from '../notes/notes.module.js'
 import {ExamsModule} from '../exams/exams.module.js'
 import {AuthModule} from "../auth/auth.module.js";
+import {PrismaModule} from "../prisma/prisma.module.js";
 
 @Module({
   imports: [
